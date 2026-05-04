@@ -14,10 +14,15 @@ app.get('/', (req, res) => {
 });
 
 app.post('/generate-chapter', async (req, res) => {
-  const { bookTitle, language, chapterNumber, totalChapters, topic, wordsPerChapter } = req.body;
+  const { bookTitle, language, chapterNumber, totalChapters, topic, wordsPerChapter, previousSummary } = req.body;
+
+  const contextLine = previousSummary
+    ? `Previous chapters: ${previousSummary}`
+    : '';
 
   const prompt = `Book:"${bookTitle}"|Lang:${language}|Ch${chapterNumber}/${totalChapters}:"${topic}"
 Words:~${wordsPerChapter}|Format:H1 title then H2 subheadings then paragraphs
+${contextLine}
 Write complete chapter in ${language}. No preamble. Start directly with chapter title.`;
 
   try {
