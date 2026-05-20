@@ -14,16 +14,31 @@ app.get('/', (req, res) => {
 });
 
 app.post('/generate-chapter', async (req, res) => {
-  const { bookTitle, language, chapterNumber, totalChapters, topic, wordsPerChapter, previousSummary } = req.body;
+  const { bookTitle, language, chapterNumber, totalChapters, topic, wordsPerChapter, previousSummary, userIdea } = req.body;
 
   const contextLine = previousSummary
     ? `Previous chapters: ${previousSummary}`
     : '';
 
-  const prompt = `Book:"${bookTitle}"|Lang:${language}|Ch${chapterNumber}/${totalChapters}:"${topic}"
-Words:~${wordsPerChapter}|Format:H1 title then H2 subheadings then paragraphs
+  const userIdeaLine = userIdea 
+    ? `User specific instructions/idea: "${userIdea}"`
+    : '';
+
+  const prompt = `Book Title: "${bookTitle}"
+Language: ${language}
+Part ${chapterNumber} of ${totalChapters}
+Section Topic: "${topic}"
+Target Word Count: ~${wordsPerChapter} words
+
+STRUCTURE RULES:
+1. Use markdown-style subheadings (starting with ##) for section breaks within the chapter.
+2. Use bullet points (- or *) for lists or key takeaways where appropriate.
+3. Content must be professional, well-structured, and flow logically.
+
+${userIdeaLine}
 ${contextLine}
-Write complete chapter in ${language}. No preamble. Start directly with chapter title.`;
+
+TASK: Write the complete content for this section in ${language}. Start directly with the section content or title. No preamble or chat filler.`;
 
   try {
     const response = await fetch(
@@ -37,7 +52,8 @@ Write complete chapter in ${language}. No preamble. Start directly with chapter 
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 4000
+          max_tokens: 4000,
+          temperature: 0.7
         })
       }
     );
